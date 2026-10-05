@@ -1,20 +1,21 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Multi Frequency WAV Maker</title><style>body{font-family:system-ui;max-width:720px;margin:auto;padding:20px}textarea{width:100%;height:260px;font-size:16px;box-sizing:border-box}input,select,button{font-size:16px;padding:10px;margin:6px 0}button{width:100%;font-weight:bold}.row{display:flex;gap:12px;flex-wrap:wrap}.note{color:#666}progress{width:100%}</style></head><body>
-<h2>マルチ周波数 WAV メーカー</h2><p>周波数を1行に1つ入力してください（Hz）。</p>
-<textarea id="f" placeholder="例：100&#10;500&#10;1472"></textarea>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Multi Frequency WAV Maker</title><style>body{font-family:system-ui;max-width:720px;margin:auto;padding:20px}textarea{width:100%;height:220px;font-size:16px;box-sizing:border-box}input,select,button{font-size:16px;padding:10px;margin:6px 0}button{width:100%;font-weight:bold}.row{display:flex;gap:12px;flex-wrap:wrap}.box{padding:12px;background:#eee;border-radius:10px}.note{color:#666}progress{width:100%}</style></head><body>
+<h2>マルチ周波数 WAV メーカー</h2><div class="box"><b>基本周波数：1～10,000 Hz</b><br>1 Hz刻みの10,000周波数を自動で含めます。</div>
+<p>追加する周波数を1行に1つ入力（空欄でも作成可能）</p><textarea id="f" placeholder="例：&#10;14720&#10;20500&#10;70802"></textarea>
 <div class="row"><label>長さ（秒）<br><input id="d" type="number" value="10" min=".1" step=".1"></label><label>サンプルレート<br><select id="r"><option>44100</option><option>48000</option><option>96000</option><option selected>192000</option><option>384000</option></select></label></div>
-<button id="b">WAVを作成・保存</button><progress id="p" max="1" value="0" hidden></progress><div id="s">準備完了</div>
-<p class="note">70,802 Hzは192,000 Hz以上を選択。WAVに記録できても実際の出力帯域はDAC・アンプ・スピーカーに依存します。</p>
+<button id="b">WAVを作成・保存</button><progress id="p" max="1" value="0" hidden></progress><div id="s">準備完了</div><p class="note">高周波をWAVに記録できても、実際の再生帯域は端末・DAC・アンプ・スピーカー等に依存します。</p>
 <script>
-const q=x=>document.getElementById(x),wait=()=>new Promise(x=>setTimeout(x,0));
-function str(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}
-q("b").onclick=async()=>{
-try{
-let fs=q("f").value.replaceAll(",","\n").split(/\n/).map(x=>Number(x.trim().toLowerCase().replace("hz",""))).filter(x=>x);
-let sr=+q("r").value,sec=+q("d").value;if(!fs.length||fs.some(x=>!isFinite(x)||x<=0))throw Error("周波数を入力してください");
-if(fs.some(x=>x>=sr/2))throw Error(sr+" Hzでは "+sr/2+" Hz未満にしてください");
+const q=x=>document.getElementById(x),wait=()=>new Promise(r=>setTimeout(r,0));
+function st(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}
+function hs(x,n){let d=Math.sin(x/2);return Math.abs(d)<1e-12?0:Math.sin(n*x/2)*Math.sin((n+1)*x/2)/d}
+q("b").onclick=async()=>{try{
+let ex=q("f").value.replaceAll(",","\n").split(/\n/).map(x=>x.trim().toLowerCase().replace("hz","")).filter(Boolean).map(Number);
+if(ex.some(x=>!isFinite(x)||x<=0))throw Error("追加周波数を正しく入力してください");
+let sr=+q("r").value,sec=+q("d").value;if(!isFinite(sec)||sec<=0)throw Error("長さを正しく入力してください");
+if(ex.some(x=>x>=sr/2))throw Error("追加周波数は "+sr/2+" Hz未満にしてください");
 let n=Math.floor(sr*sec),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);q("b").disabled=true;q("p").hidden=false;
-str(v,0,"RIFF");v.setUint32(4,36+n*2,true);str(v,8,"WAVE");str(v,12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);str(v,36,"data");v.setUint32(40,n*2,true);
-for(let a=0;a<n;a+=20000){let e=Math.min(n,a+20000);for(let i=a;i<e;i++){let t=i/sr,x=0;for(let f of fs)x+=Math.sin(2*Math.PI*f*t);x=.92*x/fs.length;v.setInt16(44+i*2,Math.max(-32767,Math.min(32767,Math.round(x*32767))),true)}q("p").value=e/n;q("s").textContent="生成中 "+Math.round(e/n*100)+"%";await wait()}
-let blob=new Blob([buf],{type:"audio/wav"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="multi_"+sr+"Hz_"+fs.length+"tones.wav";a.click();setTimeout(()=>URL.revokeObjectURL(u),30000);q("s").textContent="完成 "+(blob.size/1048576).toFixed(1)+" MB";
+st(v,0,"RIFF");v.setUint32(4,36+n*2,true);st(v,8,"WAVE");st(v,12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);st(v,36,"data");v.setUint32(40,n*2,true);
+const N=10000,g=.92/(N+ex.length),tp=2*Math.PI;
+for(let a=0;a<n;a+=20000){let e=Math.min(n,a+20000);for(let i=a;i<e;i++){let t=i/sr,sum=hs(tp*t,N);for(let f of ex)sum+=Math.sin(tp*f*t);let y=Math.max(-1,Math.min(1,g*sum));v.setInt16(44+i*2,Math.round(y*32767),true)}q("p").value=e/n;q("s").textContent="生成中 "+Math.round(e/n*100)+"%";await wait()}
+let bl=new Blob([buf],{type:"audio/wav"}),u=URL.createObjectURL(bl),a=document.createElement("a");a.href=u;a.download="1-10000Hz_plus_"+ex.length+"_extra_"+sr+"Hz.wav";a.click();setTimeout(()=>URL.revokeObjectURL(u),30000);q("s").textContent="完成：基本10,000個 + 追加"+ex.length+"個";
 }catch(e){alert(e.message);q("s").textContent="エラー"}finally{q("b").disabled=false;q("p").hidden=true}}
 </script></body></html>
