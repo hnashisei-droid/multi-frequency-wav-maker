@@ -5,9 +5,9 @@ input,select,button{font-size:16px;padding:10px;margin:6px 0}button{width:100%;f
 <h2>マルチ周波数 WAV メーカー</h2>
 <div class="box"><b>基本周波数：1～10,000 Hz</b><br>1 Hz刻みの10,000周波数を自動で含めます。位相を分散してブツブツ音を抑えます。</div>
 <p>追加する周波数を1行に1つ入力（空欄でも作成可能）</p>
-<textarea id="f" placeholder="例：&#10;14720&#10;20500&#10;70802"></textarea>
-<div class="row"><label>長さ（秒）<br><input id="d" type="number" value="10" min="1" step="1"></label>
-<label>サンプルレート<br><select id="r"><option>44100</option><option>48000</option><option>96000</option><option selected>192000</option><option>384000</option></select></label></div>
+<textarea id="f" placeholder="例：&#10;70802&#10;198102"></textarea>
+<div class="row"><label>長さ（秒）<br><input id="d" type="number" value="1" min="1" step="1"></label>
+<label>サンプルレート<br><select id="r"><option>192000</option><option>384000</option><option>500000</option><option selected>768000</option><option>1000000</option><option>1536000</option><option>2000000</option></select></label></div>
 <button id="b">WAVを作成・保存</button><progress id="p" max="1" value="0" hidden></progress><div id="s">準備完了</div>
 <p class="note">基本1～10,000 Hzは、Schroeder位相を使ってピークの集中を抑えています。整数秒の長さでは基本周波数群がループ境界で連続しやすくなります。追加周波数も整数Hzなら同様です。実際の再生帯域は端末・DAC・アンプ・スピーカー等に依存します。</p>
 <script>
