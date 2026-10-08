@@ -15,6 +15,7 @@ const q=x=>document.getElementById(x),wait=()=>new Promise(r=>setTimeout(r,0));
 function st(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}
 q("b").onclick=async()=>{try{
  let ex=q("f").value.replaceAll(",","\n").split(/\n/).map(x=>x.trim().toLowerCase().replace("hz","")).filter(Boolean).map(Number);
+ ex=[...new Set(ex)].filter(x=>x<1||x>5000);
  if(ex.some(x=>!isFinite(x)||x<=0))throw Error("追加周波数を正しく入力してください");
  let sr=+q("r").value,sec=+q("d").value;if(!isFinite(sec)||sec<=0)throw Error("長さを正しく入力してください");
  if(ex.some(x=>x>=sr/2))throw Error("追加周波数は "+sr/2+" Hz未満にしてください");
